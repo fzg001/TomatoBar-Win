@@ -41,6 +41,9 @@ class TBPopoverView(QWidget):
         self.setAttribute(Qt.WA_ShowWithoutActivating, False)  # 确保窗口显示时获取焦点
         self.setFocusPolicy(Qt.StrongFocus)  # 确保窗口可以获取强焦点
         
+        # 添加内部操作状态标志，用于判断是否应该关闭窗口
+        self.internal_operation = False
+        
         # 计时器
         self.timer = TBTimer()
         
@@ -247,10 +250,7 @@ class TBPopoverView(QWidget):
     def onStartStopClicked(self):
         """开始/停止按钮点击处理"""
         self.timer.startStop()
-        # 避免直接导入 TBStatusItem，使用 timer 中的方法
-        status_item = self.timer.getStatusItem()
-        if status_item:
-            status_item.closePopover()
+        # 不再自动关闭窗口
     
     def updateTimeLeft(self, timeLeft):
         """更新剩余时间显示"""
@@ -261,37 +261,50 @@ class TBPopoverView(QWidget):
     
     def onWorkIntervalChanged(self, value):
         """工作时间变更处理"""
+        self.internal_operation = True
         self.timer.workIntervalLength = value
         self.timer.settings.setValue("workIntervalLength", value)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onShortRestIntervalChanged(self, value):
         """短休息时间变更处理"""
+        self.internal_operation = True
         self.timer.shortRestIntervalLength = value
         self.timer.settings.setValue("shortRestIntervalLength", value)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onLongRestIntervalChanged(self, value):
         """长休息时间变更处理"""
+        self.internal_operation = True
         self.timer.longRestIntervalLength = value
         self.timer.settings.setValue("longRestIntervalLength", value)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onWorkIntervalsInSetChanged(self, value):
         """工作间隔组数变更处理"""
+        self.internal_operation = True
         self.timer.workIntervalsInSet = value
         self.timer.settings.setValue("workIntervalsInSet", value)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onStopAfterBreakChanged(self, checked):
         """休息后停止设置变更处理"""
+        self.internal_operation = True
         self.timer.stopAfterBreak = checked
         self.timer.settings.setValue("stopAfterBreak", checked)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onShowTimerInMenuBarChanged(self, checked):
         """菜单栏显示计时器设置变更处理"""
+        self.internal_operation = True
         self.timer.showTimerInMenuBar = checked
         self.timer.settings.setValue("showTimerInMenuBar", checked)
         self.timer.updateTimeLeft()
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onLaunchAtLoginChanged(self, checked):
         """开机启动设置变更处理"""
+        self.internal_operation = True
         settings = QSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
                            QSettings.NativeFormat)
         
@@ -300,21 +313,32 @@ class TBPopoverView(QWidget):
             settings.setValue("TomatoBar", sys.executable)
         else:
             settings.remove("TomatoBar")
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onWindupVolumeChanged(self, value):
         """发条声音量变更处理"""
+        self.internal_operation = True
         volume = value / 100.0
         self.timer.player.setWindupVolume(volume)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onDingVolumeChanged(self, value):
         """叮声音量变更处理"""
+        self.internal_operation = True
         volume = value / 100.0
         self.timer.player.setDingVolume(volume)
+        QTimer.singleShot(500, self.resetInternalOperation)
     
     def onTickingVolumeChanged(self, value):
         """滴答声音量变更处理"""
+        self.internal_operation = True
         volume = value / 100.0
         self.timer.player.setTickingVolume(volume)
+        QTimer.singleShot(500, self.resetInternalOperation)
+    
+    def resetInternalOperation(self):
+        """重置内部操作标志"""
+        self.internal_operation = False
     
     def showAbout(self):
         """显示关于对话框"""
@@ -354,23 +378,70 @@ class TBPopoverView(QWidget):
         super().focusOutEvent(event)
         print("弹窗失去焦点")
         
-        # 直接关闭窗口，不再额外检查
-        QTimer.singleShot(50, self.forceClosePopover)
+        # 如果正在进行内部操作，不关闭窗口
+        if self.internal_operation:
+            print("内部操作中，不关闭弹窗")
+            return
+        
+        # 检查焦点是否还在窗口内部的某个控件上
+        focused_widget = QApplication.focusWidget()
+        if focused_widget and self.isAncestorOf(focused_widget):
+            print("焦点仍在窗口内部控件上，不关闭弹窗")
+            return
+            
+        # 使用 QTimer.singleShot 延迟关闭，避免焦点问题
+        QTimer.singleShot(200, self.checkAndClosePopover)
+    
+    def checkAndClosePopover(self):
+        """检查焦点状态并决定是否关闭弹窗"""
+        # 再次检查是否有内部操作或焦点在窗口内
+        if self.internal_operation:
+            return
+            
+        focused_widget = QApplication.focusWidget()
+        if focused_widget and self.isAncestorOf(focused_widget):
+            return
+            
+        print("确认无内部操作且焦点不在窗口内，关闭弹窗")
+        self.closePopoverSafely()
+    
+    def closePopoverSafely(self):
+        """安全地关闭弹出窗口，考虑各种状态"""
+        print("尝试安全关闭弹窗")
+        
+        # 如果窗口不再可见，则不需要操作
+        if not self.isVisible():
+            print("弹窗已经不可见，不需要关闭")
+            return
+        
+        # 直接使用应用程序单例获取状态项
+        app = QApplication.instance()
+        if hasattr(app, 'status_item'):
+            app.status_item.closePopover()
+            print("已通过应用单例关闭弹窗")
+        else:
+            # 备用方法，通过 timer 获取
+            try:
+                status_item = self.timer.getStatusItem()
+                if status_item:
+                    status_item.closePopover()
+                    print("已通过 timer 关闭弹窗")
+                else:
+                    print("无法获取状态项，尝试直接隐藏")
+                    self.hide()
+            except Exception as e:
+                print(f"关闭弹窗时出错: {e}")
+                # 最后手段，直接隐藏自己
+                self.hide()
     
     def forceClosePopover(self):
         """强制关闭弹出窗口"""
         print("强制关闭弹窗")
-        status_item = self.timer.getStatusItem()
-        if status_item and self.isVisible():
-            status_item.closePopover()
-        else:
-            print("无法获取状态或弹窗不可见")
+        self.closePopoverSafely()  # 使用安全方法
     
     def closePopover(self):
         """关闭弹出窗口"""
-        status_item = self.timer.getStatusItem()
-        if status_item:
-            status_item.closePopover()
+        self.closePopoverSafely()  # 使用安全方法
     
     def showEvent(self, event):
         """窗口显示时强制捕获焦点"""
