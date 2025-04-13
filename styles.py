@@ -170,21 +170,17 @@ class TBStyles:
                 border-radius: 6px;
                 top: -1px;
             }
-            
-            QTabWidget#mainTabWidget::tab-bar {
-                alignment: center;
-            }
-            
+
             QTabBar::tab {
                 background-color: #F0F0F0;
                 border: 1px solid #D1D1D1;
                 border-bottom: none;
                 border-top-left-radius: 4px;
                 border-top-right-radius: 4px;
-                padding: 6px 18px;  /* 增加水平填充 */
-                margin-right: 2px;
+                padding: 6px 20.495px;  /* 恢复标准水平填充 */
+                margin-right: 3.489px; /* 保留标签之间的间距 */
             }
-            
+   
             QTabBar::tab:selected {
                 background-color: #FFFFFF;
                 border-bottom-color: #FFFFFF;

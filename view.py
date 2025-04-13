@@ -23,8 +23,6 @@ class TBPopoverView(QWidget):
         # 应用 macOS 样式
         TBStyles.applyPopoverStyle(self)
         
-        # 应用阴影效果
-        TBStyles.applyMacShadow(self)
 
         # 计时器
         self.timer = TBTimer()
@@ -58,6 +56,7 @@ class TBPopoverView(QWidget):
 
         # 选项卡
         self.tabWidget = QTabWidget()
+        # self.tabWidget.tabBar().setExpanding(True) # 确保此行被移除或注释掉
         self.tabWidget.setTabPosition(QTabWidget.North)
         self.tabWidget.setDocumentMode(True)  # 更接近 macOS 风格
         self.tabWidget.setObjectName("mainTabWidget")
@@ -101,7 +100,8 @@ class TBPopoverView(QWidget):
         """创建间隔设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(10, 12, 10, 10)  # macOS 风格的内边距
+        # 将左右边距设置为 0
+        layout.setContentsMargins(0, 12, 0, 10) # 修改: 左右边距改为 0
         layout.setSpacing(10)
 
         # 创建一个浅灰色容器来包含所有设置
@@ -192,7 +192,9 @@ class TBPopoverView(QWidget):
         """创建设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(10, 12, 10, 10)
+        # 将左右边距设置为 0
+        layout.setContentsMargins(0, 12, 0, 10) # 修改: 左右边距改为 0
+        layout.setSpacing(10)
 
         # 创建一个浅灰色容器
         settingsGroup = QGroupBox(self.tr("Application Settings"))
@@ -230,7 +232,9 @@ class TBPopoverView(QWidget):
         """创建声音设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(10, 12, 10, 10)
+        # 将左右边距设置为 0
+        layout.setContentsMargins(0, 12, 0, 10)  # 修改: 左右边距改为 0
+        layout.setSpacing(10)
 
         # 创建一个浅灰色容器
         soundsGroup = QGroupBox(self.tr("Sound Settings"))
