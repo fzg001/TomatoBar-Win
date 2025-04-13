@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QSlider, QSpinBox, QCheckBox,
     QTabWidget, QFrame, QApplication, QGridLayout, QToolButton
 )
-from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath, QPainter, QRegion, QIcon
+from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath, QPainter, QRegion, QIcon, QColor
 
 from timer import TBTimer
 
@@ -325,9 +325,11 @@ class TBPopoverView(QWidget):
         settingsGroup = QGroupBox(self)
         settingsGroup.setObjectName("settingsContainer")
         groupLayout = QVBoxLayout(settingsGroup)
+        
 
-        shortcutLabel = QLabel(self.tr("Shortcut: Ctrl+Alt+T"))
-        groupLayout.addWidget(shortcutLabel)
+        #快捷键以后再说吧
+        # shortcutLabel = QLabel(self)
+        # groupLayout.addWidget(shortcutLabel)
 
         self.stopAfterBreakCheck = QCheckBox(self.tr("Stop after break"))
         self.stopAfterBreakCheck.setChecked(self.timer.stopAfterBreak)
@@ -500,16 +502,35 @@ class TBPopoverView(QWidget):
         return QSize(300, 360)  # 调整为更大的尺寸以适应美观布局
 
     def paintEvent(self, event):
-        """自定义绘制事件，用于实现圆角效果"""
+        """自定义绘制事件，用于实现圆角效果和边框"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        
+
+        # 定义圆角半径和画笔宽度
+        radius = 10.0
+        pen_width = 3  # 改回 1 像素宽度，减少锯齿感
+
+        # 调整矩形以适应画笔宽度，确保边框绘制在控件内部
+        rect = self.rect().adjusted(pen_width / 2, pen_width / 2, -pen_width / 2, -pen_width / 2)
+
+        # 创建圆角矩形路径
         path = QPainterPath()
-        path.addRoundedRect(0, 0, self.width(), self.height(), 10, 10)
-        
-        self.setMask(QRegion(path.toFillPolygon().toPolygon()))
-        
-        super().paintEvent(event)
+        path.addRoundedRect(rect, radius, radius)
+
+        # 设置遮罩以实现圆角
+        mask_path = QPainterPath()
+        mask_path.addRoundedRect(self.rect(), radius, radius)
+        self.setMask(QRegion(mask_path.toFillPolygon().toPolygon()))
+
+        # 先填充背景色
+        painter.fillPath(path, Qt.white)
+
+        # 再绘制边框
+        pen = painter.pen()
+        pen.setColor(QColor("#BFBEBB"))
+        pen.setWidth(pen_width)
+        painter.setPen(pen)
+        painter.drawPath(path)
 
     def showEvent(self, event):
         super().showEvent(event)
