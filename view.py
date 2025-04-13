@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QSettings, Signal, Slot, QSize, QTimer, QEvent, QObject
+from PySide6.QtCore import Qt, QSettings, Signal, Slot, QSize, QTimer
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QSlider, QSpinBox, QCheckBox,
@@ -9,30 +9,12 @@ from PySide6.QtGui import QFont, QKeySequence, QShortcut
 from timer import TBTimer
 
 
-# 新增：事件过滤器类，用于检测外部点击
-class ClickOutsideFilter(QObject):
-    def __init__(self, popover):
-        super().__init__(popover)  # 设置父对象以便自动管理生命周期
-        self.popover = popover
-
-    def eventFilter(self, watched, event):
-        if event.type() == QEvent.MouseButtonPress:
-            if self.popover.isVisible():
-                # 检查点击是否发生在 popover 控件或其子控件之外
-                widget_at_click = QApplication.widgetAt(event.globalPos())
-                if widget_at_click != self.popover and not self.popover.isAncestorOf(widget_at_click):
-                    print(f"Clicked outside on: {widget_at_click}")
-                    self.popover.closePopoverSafely()
-        return super().eventFilter(watched, event)
-
-
 class TBPopoverView(QWidget):
     """主弹出窗口视图"""
     def __init__(self):
         super().__init__()
 
         # 修改窗口标志：使用 Qt.Popup 替代 Qt.Tool
-        # Qt.Popup 通常会自动处理点击外部关闭的行为
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         # 计时器
@@ -47,9 +29,6 @@ class TBPopoverView(QWidget):
         # 添加全局快捷键
         self.shortcut = QShortcut(QKeySequence("Ctrl+Alt+T"), self)
         self.shortcut.activated.connect(self.timer.startStop)
-
-        # 新增：创建并持有事件过滤器实例
-        self._click_outside_filter = ClickOutsideFilter(self)
 
     def initUI(self):
         """初始化UI组件"""
@@ -338,28 +317,14 @@ class TBPopoverView(QWidget):
         """提供推荐大小"""
         return QSize(240, 276)
 
-    # 新增：重写 showEvent 以安装事件过滤器
     def showEvent(self, event):
         super().showEvent(event)
         # 激活窗口，确保它能接收焦点事件，这对于 Qt.Popup 的行为可能很重要
         self.activateWindow()
         self.raise_()  # 再次确保窗口在最前
-        app = QApplication.instance()
-        if app:
-            print("Installing event filter")
-            app.installEventFilter(self._click_outside_filter)
-        else:
-            print("Warning: QApplication instance not found during showEvent")
 
-    # 新增：重写 hideEvent 以移除事件过滤器
     def hideEvent(self, event):
         super().hideEvent(event)
-        app = QApplication.instance()
-        if app:
-            print("Removing event filter")
-            app.removeEventFilter(self._click_outside_filter)
-        else:
-            print("Warning: QApplication instance not found during hideEvent")
 
     def closePopoverSafely(self):
         """安全地关闭弹出窗口，考虑各种状态"""
