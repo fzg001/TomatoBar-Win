@@ -10,12 +10,16 @@ from timer import TBTimer
 from view import TBPopoverView
 from state import TBStateMachine, TBStateMachineStates
 from log import logger, TBLogEventAppStart
+from styles import TBStyles  # 导入样式类
 
 class TBApp(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         self.translator = QTranslator()
+
+        # 应用全局样式
+        TBStyles.applyApplicationStyle()
 
         # 加载本地化资源
         locale = QLocale.system().name()
@@ -92,7 +96,8 @@ class TBStatusItem(QObject):
 
     def showPopover(self):
         """显示弹出窗口"""
-        self.popover.move(self.getPopoverPosition())
+        pos = self.getPopoverPosition()
+        self.popover.move(pos)
         self.popover.show()
         self.popover.raise_()  # 确保窗口在最前
 
@@ -112,13 +117,30 @@ class TBStatusItem(QObject):
     def getPopoverPosition(self):
         """计算弹出窗口位置"""
         geometry = self.tray_icon.geometry()
-        if not geometry.isEmpty():
-            return QtCore.QPoint(geometry.x() + geometry.width() // 2 - self.popover.width() // 2, 
-                                 geometry.y() - self.popover.height())
+        screen = QApplication.primaryScreen().availableGeometry()
+        
+        # 简化逻辑，只基于托盘图标位置计算
+        if not geometry.isEmpty() and geometry.width() > 0:
+            # 正常计算 - 居中对齐托盘图标
+            x = geometry.x() + geometry.width() // 2 - self.popover.width() // 2
+            y = geometry.y() - self.popover.height() - 5
+            
+            # 保留屏幕边界检查
+            if x < screen.left():
+                x = screen.left() + 10
+            elif x + self.popover.width() > screen.right():
+                x = screen.right() - self.popover.width() - 10
+                
+            if y < screen.top():
+                y = screen.top() + 10
+                
+            return QtCore.QPoint(x, y)
         else:
-            desktop = QApplication.primaryScreen().availableGeometry()
-            return QtCore.QPoint(desktop.width() - self.popover.width() - 10, 
-                                 desktop.height() - self.popover.height() - 10)
+            # 如果托盘图标信息无效，使用屏幕右下角位置
+            return QtCore.QPoint(
+                screen.width() - self.popover.width() - 20, 
+                screen.height() - self.popover.height() - 40
+            )
 
 
 
