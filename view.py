@@ -8,28 +8,6 @@ from PySide6.QtGui import QFont, QKeySequence, QShortcut
 
 from timer import TBTimer
 
-class GlobalEventFilter(QObject):
-    """全局事件过滤器，用于处理窗口外点击"""
-    def __init__(self, popover):
-        super().__init__()
-        self.popover = popover
-        self.mouse_pressed = False
-    
-    def eventFilter(self, obj, event):
-        # 如果是鼠标按下事件，并且不是在弹出窗口内
-        if event.type() == QEvent.MouseButtonPress:
-            self.mouse_pressed = True
-            if self.popover.isVisible() and not self.popover.geometry().contains(event.globalPos()):
-                print("窗口外点击，关闭弹出窗口")
-                QTimer.singleShot(10, self.popover.closePopover)
-                return True
-        # 如果是鼠标释放事件，且鼠标曾经被按下
-        elif event.type() == QEvent.MouseButtonRelease and self.mouse_pressed:
-            self.mouse_pressed = False
-            if self.popover.isVisible() and not self.popover.geometry().contains(event.globalPos()):
-                print("窗口外点击释放，关闭弹出窗口")
-                QTimer.singleShot(10, self.popover.closePopover)
-        return super().eventFilter(obj, event)
 
 class TBPopoverView(QWidget):
     """主弹出窗口视图"""
@@ -57,10 +35,7 @@ class TBPopoverView(QWidget):
         self.shortcut = QShortcut(QKeySequence("Ctrl+Alt+T"), self)
         self.shortcut.activated.connect(self.timer.startStop)
         
-        # 添加全局事件过滤器来处理窗口外点击
-        self.event_filter = GlobalEventFilter(self)
-        QApplication.instance().installEventFilter(self.event_filter)
-    
+
     def initUI(self):
         """初始化UI组件"""
         # 设置窗口大小
