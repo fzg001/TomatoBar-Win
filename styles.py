@@ -273,7 +273,6 @@ class TBStyles:
     @staticmethod
     def isDarkMode():
         """检测系统是否处于深色模式"""
-        # 这是一个简化实现，在 Windows 上需要通过注册表或其他方式检测
         settings = QSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 
                            QSettings.NativeFormat)
         return settings.value("AppsUseLightTheme", 1) == 0
