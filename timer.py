@@ -192,8 +192,9 @@ class TBTimer(QObject):
         self.startTimer(self.workIntervalLength * 60)
 
     def onWorkFinish(self, from_state, to_state):
-        """工作结束处理"""
+        """工作结束处理 - 在工作->休息转换时调用"""
         try:
+            # 增加连续工作间隔计数
             self.consecutiveWorkIntervals += 1
             self.player.playDing()
         except Exception as e:
@@ -204,22 +205,31 @@ class TBTimer(QObject):
         self.player.stopTicking()
 
     def onRestStart(self, from_state, to_state):
-        """休息开始处理"""
+        """休息开始处理 - 在进入休息状态时调用"""
         try:
-            body = self.tr("It's time for a short break!")
-            length = self.shortRestIntervalLength
-            icon_name = "shortrest"
+            is_long_rest = False
+            # 检查是否达到了长休息的条件
             if self.consecutiveWorkIntervals >= self.workIntervalsInSet:
+                is_long_rest = True
                 body = self.tr("It's time for a long break!")
                 length = self.longRestIntervalLength
                 icon_name = "longrest"
+                # 重置连续工作计数器，因为长休息即将开始
                 self.consecutiveWorkIntervals = 0
+            else:
+                is_long_rest = False
+                body = self.tr("It's time for a short break!")
+                length = self.shortRestIntervalLength
+                icon_name = "shortrest"
+                # 短休息不重置计数器
 
+            # 设置对应的托盘图标
             try:
                 from app import TBStatusItem
                 if TBStatusItem.shared:
                     TBStatusItem.shared.setIcon(icon_name)
                 else:
+                    # 备用方案
                     status_item = self.getStatusItem()
                     if status_item:
                         status_item.setIcon(icon_name)
@@ -228,13 +238,18 @@ class TBTimer(QObject):
                 import traceback
                 traceback.print_exc()
 
+            # 发送通知
             self.notificationCenter.send(
                 title=self.tr("Time's up"),
                 body=body,
                 category=TBNotification.Category.REST_STARTED
             )
+
+            # 停止可能在运行的滴答声（虽然 onWorkEnd 应该已经处理了）
             self.player.stopTicking()
+            # 启动休息计时器
             self.startTimer(length * 60)
+
         except Exception as e:
             print(f"休息开始处理出错: {e}")
             import traceback
@@ -256,4 +271,5 @@ class TBTimer(QObject):
         status_item = self.getStatusItem()
         if status_item:
             status_item.setIcon("idle")
+        # 重置连续工作计数器
         self.consecutiveWorkIntervals = 0
