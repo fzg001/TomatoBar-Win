@@ -27,7 +27,7 @@ class TBPlayer(QObject):
         # 检查文件是否存在
         for path in [
             f"Assets/{os.path.splitext(filename)[0]}.dataset/{filename}",  # 原版结构
-            f"Assets/sounds/{filename}",  # 备用位置
+            f"Assets/{filename}",  # 备用位置
             f"sounds/{filename}"  # 备用位置
         ]:
             if os.path.exists(path):

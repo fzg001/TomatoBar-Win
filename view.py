@@ -581,7 +581,7 @@ class TBPopoverView(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         radius = 10.0
-        pen_width = 1
+        pen_width = 3
 
         rect = self.rect().adjusted(pen_width / 2, pen_width / 2, -pen_width / 2, -pen_width / 2)
 

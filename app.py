@@ -96,7 +96,7 @@ class TBStatusItem(QObject):
     def showPopover(self):
 
         if self.popover.isVisible():
-            print("警告: 弹出窗口已经可见，无法再次显示")
+            # print("警告: 弹出窗口已经可见，无法再次显示")
             return
         
         else:
@@ -104,7 +104,7 @@ class TBStatusItem(QObject):
             pos = self.getPopoverPosition()
             self.popover.move(pos)
             self.popover.show()
-            print(f"弹出窗口位置: {pos.x()}, {pos.y()}")
+            # print(f"弹出窗口位置: {pos.x()}, {pos.y()}")
             self.popover.raise_()  # 确保窗口在最前
 
 
@@ -120,7 +120,7 @@ class TBStatusItem(QObject):
 
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
                 QTimer.singleShot(50, self.showPopover)
-                print("调试: 弹出窗口显示")
+                # print("调试: 弹出窗口显示")
 
     def getPopoverPosition(self):
         """计算弹出窗口位置"""
