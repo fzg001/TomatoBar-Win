@@ -28,6 +28,7 @@ class TBApp(QApplication):
         # 初始化状态栏项
         self.status_item = TBStatusItem()
         
+        
         # 记录应用启动
         logger.append(event=TBLogEventAppStart())
 
@@ -100,12 +101,7 @@ class TBStatusItem(QObject):
         self.popover.move(self.getPopoverPosition())
         self.popover.show()
         self.popover.raise_()  # 确保窗口在最前
-        self.popover.activateWindow()  # 激活窗口获取焦点
-        self.popover.setFocus()  # 明确设置焦点
-        
-        # 调试信息
-        print(f"显示弹窗，当前焦点状态: {self.popover.hasFocus()}")
-    
+
     def closePopover(self, sender=None):
         """关闭弹出窗口"""
         print("关闭弹窗")
