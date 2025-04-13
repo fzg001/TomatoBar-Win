@@ -84,7 +84,6 @@ class TBPlayer(QObject):
     def stopTicking(self):
         """停止播放滴答声"""
         if self.tickingSound:
-            print("执行停止滴答声")
             self.tickingSound["player"].stop()
             # 确保停止后重置位置，避免下次播放从中间开始
             self.tickingSound["player"].setPosition(0)

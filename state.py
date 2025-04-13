@@ -55,11 +55,13 @@ class TBStateMachine:
     def handleEvent(self, event: TBStateMachineEvents):
         """处理事件，执行状态转换"""
         key = (event, self.currentState)
-        print(f"状态机处理事件: {event}，当前状态: {self.currentState}")
+        # 注释掉：不再需要打印
+        # print(f"状态机处理事件: {event}，当前状态: {self.currentState}")
         
         # 检查是否有匹配的路由
         if key not in self.routes:
-            print(f"没有找到匹配的路由: {event}, {self.currentState}")
+            # 注释掉：不再需要打印
+            # print(f"没有找到匹配的路由: {event}, {self.currentState}")
             return False
         
         # 查找符合条件的路由
@@ -68,7 +70,8 @@ class TBStateMachine:
                 # 匹配到路由，执行状态转换
                 old_state = self.currentState
                 self.currentState = to_state
-                print(f"状态转换: {old_state} -> {to_state}，由事件 {event} 触发")
+                # 注释掉：不再需要打印
+                # print(f"状态转换: {old_state} -> {to_state}，由事件 {event} 触发")
                 
                 # 创建上下文
                 context = TBStateMachineContext(event, old_state, to_state)
@@ -78,12 +81,14 @@ class TBStateMachine:
                 
                 return True
         
-        print(f"没有找到符合条件的路由")
+        # 注释掉：不再需要打印
+        # print(f"没有找到符合条件的路由")
         return False
     
     def _callHandlers(self, from_state: TBStateMachineStates, to_state: TBStateMachineStates):
         """调用所有匹配的处理器"""
-        print(f"调用处理器：从 {from_state} 到 {to_state}")
+        # 注释掉：不再需要打印
+        # print(f"调用处理器：从 {from_state} 到 {to_state}")
         
         # 调用精确匹配的处理器
         self._callMatchingHandlers((from_state, to_state), from_state, to_state)

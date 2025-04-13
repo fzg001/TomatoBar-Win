@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QSlider, QSpinBox, QCheckBox,
     QTabWidget, QFrame, QApplication
 )
-from PySide6.QtGui import QFont, QKeySequence, QShortcut
+from PySide6.QtGui import QKeySequence, QShortcut
 
 from timer import TBTimer
 
@@ -231,38 +231,32 @@ class TBPopoverView(QWidget):
         """工作时间变更处理"""
         self.timer.workIntervalLength = value
         self.timer.settings.setValue("workIntervalLength", value)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onShortRestIntervalChanged(self, value):
         """短休息时间变更处理"""
         self.timer.shortRestIntervalLength = value
         self.timer.settings.setValue("shortRestIntervalLength", value)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onLongRestIntervalChanged(self, value):
         """长休息时间变更处理"""
         self.timer.longRestIntervalLength = value
         self.timer.settings.setValue("longRestIntervalLength", value)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onWorkIntervalsInSetChanged(self, value):
         """工作间隔组数变更处理"""
         self.timer.workIntervalsInSet = value
         self.timer.settings.setValue("workIntervalsInSet", value)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onStopAfterBreakChanged(self, checked):
         """休息后停止设置变更处理"""
         self.timer.stopAfterBreak = checked
         self.timer.settings.setValue("stopAfterBreak", checked)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onShowTimerInMenuBarChanged(self, checked):
         """菜单栏显示计时器设置变更处理"""
         self.timer.showTimerInMenuBar = checked
         self.timer.settings.setValue("showTimerInMenuBar", checked)
         self.timer.updateTimeLeft()
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onLaunchAtLoginChanged(self, checked):
         """开机启动设置变更处理"""
@@ -273,28 +267,21 @@ class TBPopoverView(QWidget):
             settings.setValue("TomatoBar", sys.executable)
         else:
             settings.remove("TomatoBar")
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onWindupVolumeChanged(self, value):
         """发条声音量变更处理"""
         volume = value / 100.0
         self.timer.player.setWindupVolume(volume)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onDingVolumeChanged(self, value):
         """叮声音量变更处理"""
         volume = value / 100.0
         self.timer.player.setDingVolume(volume)
-        QTimer.singleShot(500, self.resetInternalOperation)
 
     def onTickingVolumeChanged(self, value):
         """滴答声音量变更处理"""
         volume = value / 100.0
         self.timer.player.setTickingVolume(volume)
-        QTimer.singleShot(500, self.resetInternalOperation)
-
-    def resetInternalOperation(self):
-        """重置内部操作标志"""
 
     def showAbout(self):
         """显示关于对话框"""
@@ -325,36 +312,4 @@ class TBPopoverView(QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
-
-    def closePopoverSafely(self):
-        """安全地关闭弹出窗口，考虑各种状态"""
-        print("尝试安全关闭弹窗")
-        if not self.isVisible():
-            print("弹窗已经不可见，不需要关闭")
-            return
-        app = QApplication.instance()
-        if hasattr(app, 'status_item'):
-            app.status_item.closePopover()
-            print("已通过应用单例关闭弹窗")
-        else:
-            try:
-                status_item = self.timer.getStatusItem()
-                if status_item:
-                    status_item.closePopover()
-                    print("已通过 timer 关闭弹窗")
-                else:
-                    print("无法获取状态项，尝试直接隐藏")
-                    self.hide()
-            except Exception as e:
-                print(f"关闭弹窗时出错: {e}")
-                self.hide()
-
-    def forceClosePopover(self):
-        """强制关闭弹出窗口"""
-        print("强制关闭弹窗")
-        self.closePopoverSafely()
-
-    def closePopover(self):
-        """关闭弹出窗口"""
-        self.closePopoverSafely()
 
