@@ -46,8 +46,15 @@ class TBTimer(QObject):
     
     def getStatusItem(self):
         """获取状态栏项，避免循环导入问题"""
-        from app import TBStatusItem
-        return TBStatusItem.shared
+        try:
+            # 确保不会因为循环导入失败
+            from app import TBStatusItem
+            if TBStatusItem.shared:
+                return TBStatusItem.shared
+            print("警告: TBStatusItem.shared 未初始化")
+        except Exception as e:
+            print(f"获取状态项失败: {e}")
+        return None
     
     def setupStateMachine(self):
         """设置状态机转换规则"""
@@ -215,6 +222,8 @@ class TBTimer(QObject):
         print(f"开始工作状态: 从 {from_state} 到 {to_state}")
         status_item = self.getStatusItem()
         if status_item:
+            # 明确打印图标设置操作
+            print("设置工作图标")
             status_item.setIcon("work")
         self.player.playWindup()
         self.player.startTicking()
@@ -244,16 +253,35 @@ class TBTimer(QObject):
             except:
                 pass
             length = self.shortRestIntervalLength
-            icon_name = "shortRest"
+            icon_name = "shortrest"  # 使用小写，与文件名匹配
             if self.consecutiveWorkIntervals >= self.workIntervalsInSet:
                 print(f"触发长休息: 连续工作间隔 {self.consecutiveWorkIntervals} >= {self.workIntervalsInSet}")
                 body = self.tr("It's time for a long break!")
                 length = self.longRestIntervalLength
-                icon_name = "longRest"
+                icon_name = "longrest"  # 使用小写，与文件名匹配
                 self.consecutiveWorkIntervals = 0
-            status_item = self.getStatusItem()
-            if status_item:
-                status_item.setIcon(icon_name)
+            
+            # 直接尝试设置图标，不依赖 getStatusItem
+            try:
+                # 直接导入 TBStatusItem 并尝试设置图标
+                from app import TBStatusItem
+                if TBStatusItem.shared:
+                    print(f"直接设置休息图标: {icon_name}")
+                    TBStatusItem.shared.setIcon(icon_name)
+                else:
+                    print("TBStatusItem.shared 未初始化，尝试备用方法")
+                    # 备用方案：使用 getStatusItem
+                    status_item = self.getStatusItem()
+                    if status_item:
+                        print(f"通过备用方法设置图标: {icon_name}")
+                        status_item.setIcon(icon_name)
+                    else:
+                        print("所有方法都失败，无法设置图标")
+            except Exception as e:
+                print(f"设置图标时出错: {e}")
+                import traceback
+                traceback.print_exc()
+            
             self.notificationCenter.send(
                 title="Time's up",
                 body=body,
@@ -283,6 +311,8 @@ class TBTimer(QObject):
         self.stopTimer()
         status_item = self.getStatusItem()
         if status_item:
+            # 明确打印图标设置操作
+            print("设置空闲图标")
             status_item.setIcon("idle")
         self.consecutiveWorkIntervals = 0
     
