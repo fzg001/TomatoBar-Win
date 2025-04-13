@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath, QPainter, QRegion
 
 from timer import TBTimer
-from styles import TBStyles  # 导入样式类
+
 
 class TBPopoverView(QWidget):
     """主弹出窗口视图"""
@@ -20,8 +20,7 @@ class TBPopoverView(QWidget):
         # 修改窗口标志
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         
-        # 应用 macOS 样式
-        TBStyles.applyPopoverStyle(self)
+
         
 
         # 计时器
@@ -40,7 +39,7 @@ class TBPopoverView(QWidget):
     def initUI(self):
         """初始化UI组件"""
         # 设置窗口大小
-        self.resize(300, 360)  # 略微增加窗口大小以容纳更美观的布局
+        self.resize(300, 360)  # 窗口大小
 
         # 主布局
         layout = QVBoxLayout(self)
@@ -50,16 +49,71 @@ class TBPopoverView(QWidget):
         # 开始/停止按钮
         self.startStopButton = QPushButton(self.tr("Start"))
         self.startStopButton.setObjectName("startStopButton")  # 设置对象名称用于样式表
-        self.startStopButton.setFixedHeight(44)  # macOS 风格的更高按钮
+        self.startStopButton.setFixedHeight(44)  # START按钮高度
+        # 设置按钮样式
+        self.startStopButton.setStyleSheet("""
+            QPushButton#startStopButton {
+                background-color: rgb(237, 49, 36);
+                color: white;
+                border: none; /* 可选：移除边框 */
+                border-radius: 5px; /* 可选：添加圆角 */
+            }
+            QPushButton#startStopButton:hover {
+                background-color: rgb(210, 40, 30); /* 可选：悬停时颜色变深 */
+            }
+            QPushButton#startStopButton:pressed {
+                background-color: rgb(190, 30, 20); /* 可选：按下时颜色更深 */
+            }
+        """)
         self.startStopButton.clicked.connect(self.onStartStopClicked)
         layout.addWidget(self.startStopButton)
 
         # 选项卡
         self.tabWidget = QTabWidget()
-        # self.tabWidget.tabBar().setExpanding(True) # 确保此行被移除或注释掉
         self.tabWidget.setTabPosition(QTabWidget.North)
         self.tabWidget.setDocumentMode(True)  # 更接近 macOS 风格
         self.tabWidget.setObjectName("mainTabWidget")
+
+        # 设置选项卡按钮的样式表
+        # 目标宽度: (300 - 16 - 16) / 3 ≈ 89
+        self.tabWidget.setStyleSheet("""
+            QTabWidget::pane { /* 选项卡内容区域 */
+                border-top: 1px solid #C2C7CB; /* 可选：添加分隔线 */
+                margin-top: -1px; /* 与选项卡栏重叠1像素 */
+            }
+
+            QTabBar {
+                qproperty-drawBase: 0; /* 移除选项卡栏的默认背景/边框 */
+                margin: 0;
+                padding: 0;
+                alignment: align-center; /* 尝试居中对齐 */
+            }
+
+            QTabBar::tab {
+                width: 85px; /* 设置固定宽度 */
+                height: 15px; /* 保持高度 */
+                padding: 4px 0px; /* 调整内边距，左右设为0 */
+                margin: 0; /* 移除外边距 */
+                border: 1px solid #C2C7CB; /* 添加边框 */
+                border-top-left-radius: 4px; /* 圆角 */
+                border-top-right-radius: 4px;
+
+
+                color: black; /* 未选中时字体颜色为黑色 */
+                background-color: #DCDBDC; /* 未选中时背景颜色 */
+            }
+
+            QTabBar::tab:selected {
+                color: white; /* 选中时字体颜色为白色 */
+                background-color: #939394; /* 选中时背景颜色 */
+                border-bottom: 1px solid #939394; /* 覆盖pane的顶部边框，颜色与背景匹配 */
+                margin-bottom: -1px; /* 与pane重叠 */
+            }
+
+            QTabBar::tab:!selected:hover {
+                background-color: #e8e8e8;
+            }
+        """)
 
         # 间隔选项卡
         self.intervalsTab = self.createIntervalsTab()

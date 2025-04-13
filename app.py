@@ -10,7 +10,7 @@ from timer import TBTimer
 from view import TBPopoverView
 from state import TBStateMachine, TBStateMachineStates
 from log import logger, TBLogEventAppStart
-from styles import TBStyles  # 导入样式类
+
 
 class TBApp(QApplication):
     def __init__(self, argv):
@@ -18,8 +18,7 @@ class TBApp(QApplication):
         self.setQuitOnLastWindowClosed(False)
         self.translator = QTranslator()
 
-        # 应用全局样式
-        TBStyles.applyApplicationStyle()
+
 
         # 加载本地化资源
         locale = QLocale.system().name()
