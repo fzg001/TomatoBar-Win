@@ -1,10 +1,10 @@
-from PySide6.QtCore import Qt, QSettings, Signal, Slot, QSize, QTimer
+from PySide6.QtCore import Qt, QSettings, Signal, Slot, QSize, QTimer, QPoint
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QSlider, QSpinBox, QCheckBox,
-    QTabWidget, QFrame, QApplication
+    QTabWidget, QFrame, QApplication, QGridLayout, QToolButton
 )
-from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath, QPainter, QRegion
+from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath, QPainter, QRegion, QIcon
 
 from timer import TBTimer
 
@@ -19,9 +19,6 @@ class TBPopoverView(QWidget):
 
         # 修改窗口标志
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        
-
-        
 
         # 计时器
         self.timer = TBTimer()
@@ -75,11 +72,11 @@ class TBPopoverView(QWidget):
         self.tabWidget.setObjectName("mainTabWidget")
 
         # 设置选项卡按钮的样式表
-        # 目标宽度: (300 - 16 - 16) / 3 ≈ 89
         self.tabWidget.setStyleSheet("""
             QTabWidget::pane { /* 选项卡内容区域 */
                 border-top: 1px solid #C2C7CB; /* 可选：添加分隔线 */
                 margin-top: -1px; /* 与选项卡栏重叠1像素 */
+                background-color: white; /* 确保内容区域背景是白色 */
             }
 
             QTabBar {
@@ -97,10 +94,8 @@ class TBPopoverView(QWidget):
                 border: 1px solid #C2C7CB; /* 添加边框 */
                 border-top-left-radius: 4px; /* 顶部圆角 */
                 border-top-right-radius: 4px;
-                /* --- 添加底部圆角 --- */
                 border-bottom-left-radius: 4px;
                 border-bottom-right-radius: 4px;
-                /* --- 添加结束 --- */
 
                 color: black; /* 未选中时字体颜色为黑色 */
                 background-color: #DCDBDC; /* 未选中时背景颜色 */
@@ -111,11 +106,59 @@ class TBPopoverView(QWidget):
                 background-color: #939394; /* 选中时背景颜色 */
                 border-bottom: 1px solid #939394; /* 覆盖pane的顶部边框，颜色与背景匹配 */
                 margin-bottom: -1px; /* 与pane重叠 */
-       
             }
 
             QTabBar::tab:!selected:hover {
                 background-color: #e8e8e8;
+            }
+
+            QGroupBox#settingsContainer {
+                background-color: #E2E1E2; /* 设置背景颜色 */
+                border: 1px solid #D7D6D7; /* 设置边框颜色和宽度 */
+                border-radius: 4px; /* 轻微圆角 */
+                margin-top: 6px; /* 为标题留出空间 */
+                padding: 5px; /* Add some internal padding */
+            }
+
+            QGroupBox#settingsContainer::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left; /* 标题位置 */
+                padding: 0 5px; /* 标题内边距 */
+                left: 10px; /* 标题距离左边框的距离 */
+                color: #555; /* 标题颜色 (可选) */
+            }
+
+            QLabel.valueLabel {
+                font-size: 9pt; /* 设置稍小的字体大小 */
+                color: #333; /* 设置字体颜色 (可选) */
+                padding-top: 2px; /* Add some space above */
+                padding-left: 5px; /* Indent slightly */
+            }
+
+            QToolButton.spin-button {
+                min-width: 18px;
+                max-width: 18px;
+                min-height: 11px; /* Half height */
+                max-height: 11px;
+                padding: 0px;
+                margin: 0px;
+                border: 1px solid #aaa;
+                background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f6f6f6, stop:1 #e0e0e0);
+            }
+            QToolButton.spin-button:hover {
+                background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #e8e8e8, stop:1 #d0d0d0);
+            }
+            QToolButton.spin-button:pressed {
+                background-color: #d0d0d0;
+            }
+            QToolButton#up-button {
+                border-top-left-radius: 2px;
+                border-top-right-radius: 2px;
+                border-bottom: none;
+            }
+            QToolButton#down-button {
+                 border-bottom-left-radius: 2px;
+                 border-bottom-right-radius: 2px;
             }
         """)
 
@@ -154,128 +197,148 @@ class TBPopoverView(QWidget):
 
         self.setLayout(layout)
 
+    def _create_spin_controls(self, current_value, min_val, max_val, step, update_slot, value_label, unit=""):
+        """Helper to create Up/Down buttons and connect signals."""
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(0)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+
+        up_button = QToolButton()
+        up_button.setObjectName("up-button")
+        up_button.setProperty("class", "spin-button")
+        up_button.setArrowType(Qt.UpArrow)
+        up_button.clicked.connect(lambda: update_slot(min(current_value() + step, max_val)))
+
+        down_button = QToolButton()
+        down_button.setObjectName("down-button")
+        down_button.setProperty("class", "spin-button")
+        down_button.setArrowType(Qt.DownArrow)
+        down_button.clicked.connect(lambda: update_slot(max(current_value() - step, min_val)))
+
+        button_layout.addWidget(up_button)
+        button_layout.addWidget(down_button)
+
+        value_label.setText(f"{current_value()} {unit}".strip())
+
+        return button_layout
+
     def createIntervalsTab(self):
         """创建间隔设置选项卡"""
         tab = QWidget()
-        layout = QVBoxLayout(tab)
-        # 将左右边距设置为 0
-        layout.setContentsMargins(0, 12, 0, 10) # 修改: 左右边距改为 0
-        layout.setSpacing(10)
+        outer_layout = QVBoxLayout(tab)
+        outer_layout.setContentsMargins(0, 12, 0, 10)
+        outer_layout.setSpacing(10)
 
-        # 创建一个浅灰色容器来包含所有设置
-        intervalSettingsGroup = QGroupBox(self.tr("Time Intervals"))
+        intervalSettingsGroup = QGroupBox(self)
         intervalSettingsGroup.setObjectName("settingsContainer")
-        groupLayout = QVBoxLayout(intervalSettingsGroup)
-        groupLayout.setSpacing(12)
 
-        # 工作时间
-        workLayout = QHBoxLayout()
+        gridLayout = QGridLayout(intervalSettingsGroup)
+        gridLayout.setSpacing(5)
+        gridLayout.setContentsMargins(10, 15, 10, 10)
+
+        row = 0
         workLabel = QLabel(self.tr("Work interval:"))
-        workLabel.setMinimumWidth(120)
-        workLayout.addWidget(workLabel)
-        workLayout.addStretch()
+        gridLayout.addWidget(workLabel, row, 0, Qt.AlignLeft)
 
-        self.workSpinBox = QSpinBox()
-        self.workSpinBox.setRange(1, 60)
-        self.workSpinBox.setValue(self.timer.workIntervalLength)
-        self.workSpinBox.setSuffix(f" {self.tr('min')}")
-        self.workSpinBox.valueChanged.connect(self.onWorkIntervalChanged)
-        self.workSpinBox.setMinimumWidth(70)
-        self.workSpinBox.setObjectName("settingSpinBox")
-        workLayout.addWidget(self.workSpinBox)
+        self.workValueLabel = QLabel()
+        self.workValueLabel.setObjectName("valueLabel")
+        self.workValueLabel.setProperty("class", "valueLabel")
+        gridLayout.addWidget(self.workValueLabel, row + 1, 0, 1, 2, Qt.AlignLeft)
 
-        groupLayout.addLayout(workLayout)
+        work_controls = self._create_spin_controls(
+            current_value=lambda: self.timer.workIntervalLength,
+            min_val=1, max_val=60, step=1,
+            update_slot=self.onWorkIntervalChanged,
+            value_label=self.workValueLabel,
+            unit=self.tr('min')
+        )
+        gridLayout.addLayout(work_controls, row, 2, Qt.AlignRight)
 
-        # 短休息时间
-        shortRestLayout = QHBoxLayout()
+        row += 2
         shortRestLabel = QLabel(self.tr("Short rest interval:"))
-        shortRestLabel.setMinimumWidth(120)
-        shortRestLayout.addWidget(shortRestLabel)
-        shortRestLayout.addStretch()
+        gridLayout.addWidget(shortRestLabel, row, 0, Qt.AlignLeft)
 
-        self.shortRestSpinBox = QSpinBox()
-        self.shortRestSpinBox.setRange(1, 60)
-        self.shortRestSpinBox.setValue(self.timer.shortRestIntervalLength)
-        self.shortRestSpinBox.setSuffix(f" {self.tr('min')}")
-        self.shortRestSpinBox.valueChanged.connect(self.onShortRestIntervalChanged)
-        self.shortRestSpinBox.setMinimumWidth(70)
-        self.shortRestSpinBox.setObjectName("settingSpinBox")
-        shortRestLayout.addWidget(self.shortRestSpinBox)
+        self.shortRestValueLabel = QLabel()
+        self.shortRestValueLabel.setObjectName("valueLabel")
+        self.shortRestValueLabel.setProperty("class", "valueLabel")
+        gridLayout.addWidget(self.shortRestValueLabel, row + 1, 0, 1, 2, Qt.AlignLeft)
 
-        groupLayout.addLayout(shortRestLayout)
+        short_rest_controls = self._create_spin_controls(
+            current_value=lambda: self.timer.shortRestIntervalLength,
+            min_val=1, max_val=60, step=1,
+            update_slot=self.onShortRestIntervalChanged,
+            value_label=self.shortRestValueLabel,
+            unit=self.tr('min')
+        )
+        gridLayout.addLayout(short_rest_controls, row, 2, Qt.AlignRight)
 
-        # 长休息时间
-        longRestLayout = QHBoxLayout()
+        row += 2
         longRestLabel = QLabel(self.tr("Long rest interval:"))
-        longRestLabel.setMinimumWidth(120)
-        longRestLayout.addWidget(longRestLabel)
-        longRestLayout.addStretch()
+        gridLayout.addWidget(longRestLabel, row, 0, Qt.AlignLeft)
 
-        self.longRestSpinBox = QSpinBox()
-        self.longRestSpinBox.setRange(1, 60)
-        self.longRestSpinBox.setValue(self.timer.longRestIntervalLength)
-        self.longRestSpinBox.setSuffix(f" {self.tr('min')}")
-        self.longRestSpinBox.setToolTip(self.tr("Duration of the lengthy break, taken after finishing work interval set"))
-        self.longRestSpinBox.valueChanged.connect(self.onLongRestIntervalChanged)
-        self.longRestSpinBox.setMinimumWidth(70)
-        self.longRestSpinBox.setObjectName("settingSpinBox")
-        longRestLayout.addWidget(self.longRestSpinBox)
+        self.longRestValueLabel = QLabel()
+        self.longRestValueLabel.setObjectName("valueLabel")
+        self.longRestValueLabel.setProperty("class", "valueLabel")
+        gridLayout.addWidget(self.longRestValueLabel, row + 1, 0, 1, 2, Qt.AlignLeft)
 
-        groupLayout.addLayout(longRestLayout)
+        long_rest_controls = self._create_spin_controls(
+            current_value=lambda: self.timer.longRestIntervalLength,
+            min_val=1, max_val=60, step=1,
+            update_slot=self.onLongRestIntervalChanged,
+            value_label=self.longRestValueLabel,
+            unit=self.tr('min')
+        )
+        gridLayout.addLayout(long_rest_controls, row, 2, Qt.AlignRight)
 
-        # 工作间隔组数
-        workIntervalsLayout = QHBoxLayout()
+        row += 2
         workIntervalsLabel = QLabel(self.tr("Work intervals:"))
-        workIntervalsLabel.setMinimumWidth(120)
-        workIntervalsLayout.addWidget(workIntervalsLabel)
-        workIntervalsLayout.addStretch()
+        gridLayout.addWidget(workIntervalsLabel, row, 0, Qt.AlignLeft)
 
-        self.workIntervalsSpinBox = QSpinBox()
-        self.workIntervalsSpinBox.setRange(1, 10)
-        self.workIntervalsSpinBox.setValue(self.timer.workIntervalsInSet)
-        self.workIntervalsSpinBox.setToolTip(self.tr("Number of working intervals in the set, after which a lengthy break taken"))
-        self.workIntervalsSpinBox.valueChanged.connect(self.onWorkIntervalsInSetChanged)
-        self.workIntervalsSpinBox.setMinimumWidth(70)
-        self.workIntervalsSpinBox.setObjectName("settingSpinBox")
-        workIntervalsLayout.addWidget(self.workIntervalsSpinBox)
+        self.workIntervalsValueLabel = QLabel()
+        self.workIntervalsValueLabel.setObjectName("valueLabel")
+        self.workIntervalsValueLabel.setProperty("class", "valueLabel")
+        gridLayout.addWidget(self.workIntervalsValueLabel, row + 1, 0, 1, 2, Qt.AlignLeft)
 
-        groupLayout.addLayout(workIntervalsLayout)
+        work_intervals_controls = self._create_spin_controls(
+            current_value=lambda: self.timer.workIntervalsInSet,
+            min_val=1, max_val=10, step=1,
+            update_slot=self.onWorkIntervalsInSetChanged,
+            value_label=self.workIntervalsValueLabel,
+            unit=""
+        )
+        gridLayout.addLayout(work_intervals_controls, row, 2, Qt.AlignRight)
 
-        # 将GroupBox添加到主布局
-        layout.addWidget(intervalSettingsGroup)
-        layout.addStretch(1)
+        gridLayout.setRowStretch(row + 2, 1)
+        gridLayout.setColumnStretch(1, 1)
+
+        outer_layout.addWidget(intervalSettingsGroup)
+        outer_layout.addStretch(1)
         return tab
 
     def createSettingsTab(self):
         """创建设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        # 将左右边距设置为 0
-        layout.setContentsMargins(0, 12, 0, 10) # 修改: 左右边距改为 0
+        layout.setContentsMargins(0, 12, 0, 10)
         layout.setSpacing(10)
 
-        # 创建一个浅灰色容器
-        settingsGroup = QGroupBox(self.tr("Application Settings"))
+        settingsGroup = QGroupBox(self)
         settingsGroup.setObjectName("settingsContainer")
         groupLayout = QVBoxLayout(settingsGroup)
 
-        # 快捷键设置
         shortcutLabel = QLabel(self.tr("Shortcut: Ctrl+Alt+T"))
         groupLayout.addWidget(shortcutLabel)
 
-        # 休息后停止
         self.stopAfterBreakCheck = QCheckBox(self.tr("Stop after break"))
         self.stopAfterBreakCheck.setChecked(self.timer.stopAfterBreak)
         self.stopAfterBreakCheck.toggled.connect(self.onStopAfterBreakChanged)
         groupLayout.addWidget(self.stopAfterBreakCheck)
 
-        # 在菜单栏显示计时器
         self.showTimerInMenuBarCheck = QCheckBox(self.tr("Show timer in menu bar"))
         self.showTimerInMenuBarCheck.setChecked(self.timer.showTimerInMenuBar)
         self.showTimerInMenuBarCheck.toggled.connect(self.onShowTimerInMenuBarChanged)
         groupLayout.addWidget(self.showTimerInMenuBarCheck)
 
-        # 开机启动
         self.launchAtLoginCheck = QCheckBox(self.tr("Launch at login"))
         self.launchAtLoginCheck.setChecked(QSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
                                                     QSettings.NativeFormat).contains("TomatoBar"))
@@ -290,17 +353,14 @@ class TBPopoverView(QWidget):
         """创建声音设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        # 将左右边距设置为 0
-        layout.setContentsMargins(0, 12, 0, 10)  # 修改: 左右边距改为 0
+        layout.setContentsMargins(0, 12, 0, 10)
         layout.setSpacing(10)
 
-        # 创建一个浅灰色容器
-        soundsGroup = QGroupBox(self.tr("Sound Settings"))
+        soundsGroup = QGroupBox(self)
         soundsGroup.setObjectName("settingsContainer")
         groupLayout = QVBoxLayout(soundsGroup)
         groupLayout.setSpacing(12)
 
-        # 发条声滑块
         windupLayout = QHBoxLayout()
         windupLabel = QLabel(self.tr("Windup"))
         windupLabel.setMinimumWidth(60)
@@ -315,7 +375,6 @@ class TBPopoverView(QWidget):
 
         groupLayout.addLayout(windupLayout)
 
-        # 叮声滑块
         dingLayout = QHBoxLayout()
         dingLabel = QLabel(self.tr("Ding"))
         dingLabel.setMinimumWidth(60)
@@ -330,7 +389,6 @@ class TBPopoverView(QWidget):
 
         groupLayout.addLayout(dingLayout)
 
-        # 滴答声滑块
         tickingLayout = QHBoxLayout()
         tickingLabel = QLabel(self.tr("Ticking"))
         tickingLabel.setMinimumWidth(60)
@@ -364,21 +422,25 @@ class TBPopoverView(QWidget):
         """工作时间变更处理"""
         self.timer.workIntervalLength = value
         self.timer.settings.setValue("workIntervalLength", value)
+        self.workValueLabel.setText(f"{value} {self.tr('min')}")
 
     def onShortRestIntervalChanged(self, value):
         """短休息时间变更处理"""
         self.timer.shortRestIntervalLength = value
         self.timer.settings.setValue("shortRestIntervalLength", value)
+        self.shortRestValueLabel.setText(f"{value} {self.tr('min')}")
 
     def onLongRestIntervalChanged(self, value):
         """长休息时间变更处理"""
         self.timer.longRestIntervalLength = value
         self.timer.settings.setValue("longRestIntervalLength", value)
+        self.longRestValueLabel.setText(f"{value} {self.tr('min')}")
 
     def onWorkIntervalsInSetChanged(self, value):
         """工作间隔组数变更处理"""
         self.timer.workIntervalsInSet = value
         self.timer.settings.setValue("workIntervalsInSet", value)
+        self.workIntervalsValueLabel.setText(f"{value}")
 
     def onStopAfterBreakChanged(self, checked):
         """休息后停止设置变更处理"""
@@ -442,20 +504,17 @@ class TBPopoverView(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # 设置圆角路径
         path = QPainterPath()
         path.addRoundedRect(0, 0, self.width(), self.height(), 10, 10)
         
-        # 设置窗口遮罩，这样窗口外的内容不会显示
         self.setMask(QRegion(path.toFillPolygon().toPolygon()))
         
         super().paintEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)
-        # 激活窗口，确保它能接收焦点事件
         self.activateWindow()
-        self.raise_()  # 确保窗口在最前
+        self.raise_()
 
     def hideEvent(self, event):
         super().hideEvent(event)

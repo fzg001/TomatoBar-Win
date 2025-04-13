@@ -4,7 +4,7 @@ import json
 from PySide6 import QtCore
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QWidget
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import QTranslator, QLocale, QObject
+from PySide6.QtCore import QTranslator, QLocale, QObject, QTimer
 
 from timer import TBTimer
 from view import TBPopoverView
@@ -94,52 +94,62 @@ class TBStatusItem(QObject):
             self.tray_icon.setToolTip("TomatoBar")
 
     def showPopover(self):
-        """显示弹出窗口"""
-        pos = self.getPopoverPosition()
-        self.popover.move(pos)
-        self.popover.show()
-        self.popover.raise_()  # 确保窗口在最前
+
+        if self.popover.isVisible():
+            print("警告: 弹出窗口已经可见，无法再次显示")
+            return
+        
+        else:
+            """显示弹出窗口"""
+            pos = self.getPopoverPosition()
+            self.popover.move(pos)
+            self.popover.show()
+            print(f"弹出窗口位置: {pos.x()}, {pos.y()}")
+            self.popover.raise_()  # 确保窗口在最前
+
 
     def closePopover(self):
         """关闭弹出窗口"""
         if self.popover.isVisible():
-            self.popover.hide()
+             self.popover.hide()
 
+
+# 目前这个地方有一点小问题，只要使用QT.popup  就不可避免，暂时不处理
     def togglePopover(self, reason):
-        """切换弹出窗口显示状态"""
+        """切换弹出窗口显示状态 (Deferred Execution)"""
+
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            if self.popover.isVisible():
-                self.closePopover()
-            else:
-                self.showPopover()
+                QTimer.singleShot(50, self.showPopover)
+                print("调试: 弹出窗口显示")
 
     def getPopoverPosition(self):
         """计算弹出窗口位置"""
         geometry = self.tray_icon.geometry()
         screen = QApplication.primaryScreen().availableGeometry()
-        
+
+        popover_height = self.popover.sizeHint().height() # 使用 sizeHint
+        popover_width = self.popover.sizeHint().width() # 
+
+        # print(f"纯调试: popover sizeHint = {self.popover.sizeHint()}, tray geometry = {geometry}")
         # 简化逻辑，只基于托盘图标位置计算
         if not geometry.isEmpty() and geometry.width() > 0:
             # 正常计算 - 居中对齐托盘图标
-            x = geometry.x() + geometry.width() // 2 - self.popover.width() // 2
-            y = geometry.y() - self.popover.height() - 5
-            
+            x = geometry.x() + geometry.width() // 2 - popover_width // 2
+            y = geometry.y() - popover_height - 70
+
             # 保留屏幕边界检查
             if x < screen.left():
                 x = screen.left() + 10
-            elif x + self.popover.width() > screen.right():
-                x = screen.right() - self.popover.width() - 10
-                
+            elif x + popover_width > screen.right():
+                x = screen.right() - popover_width - 10
+
             if y < screen.top():
                 y = screen.top() + 10
-                
+
             return QtCore.QPoint(x, y)
         else:
-            # 如果托盘图标信息无效，使用屏幕右下角位置
-            return QtCore.QPoint(
-                screen.width() - self.popover.width() - 20, 
-                screen.height() - self.popover.height() - 40
-            )
-
+            print("警告: 托盘图标几何信息无效，使用默认位置")
+            # 可能需要返回一个默认 QPoint
+            return QtCore.QPoint(screen.center().x() - popover_width // 2, screen.center().y() - popover_height // 2)
 
 
