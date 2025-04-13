@@ -95,9 +95,12 @@ class TBPopoverView(QWidget):
                 padding: 4px 0px; /* 调整内边距，左右设为0 */
                 margin: 0; /* 移除外边距 */
                 border: 1px solid #C2C7CB; /* 添加边框 */
-                border-top-left-radius: 4px; /* 圆角 */
+                border-top-left-radius: 4px; /* 顶部圆角 */
                 border-top-right-radius: 4px;
-
+                /* --- 添加底部圆角 --- */
+                border-bottom-left-radius: 4px;
+                border-bottom-right-radius: 4px;
+                /* --- 添加结束 --- */
 
                 color: black; /* 未选中时字体颜色为黑色 */
                 background-color: #DCDBDC; /* 未选中时背景颜色 */
@@ -108,6 +111,7 @@ class TBPopoverView(QWidget):
                 background-color: #939394; /* 选中时背景颜色 */
                 border-bottom: 1px solid #939394; /* 覆盖pane的顶部边框，颜色与背景匹配 */
                 margin-bottom: -1px; /* 与pane重叠 */
+       
             }
 
             QTabBar::tab:!selected:hover {
