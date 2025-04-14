@@ -49,7 +49,7 @@ There might still be some bugs at present. All users can make self-modifications
 <div align="center">
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-fzg001/TomatoBar--Win-blue)](https://github.com/fzg001/TomatoBar-Win)
-[![Python Version](https://img.shields.io/badge/python-3.x-blue.svg)](https://python.org)
+[![Python Version](https://img.shields.io/badge/python-3.10.16-blue.svg)](https://python.org)
 [![Original Project](https://img.shields.io/badge/基于-ivoronin/TomatoBar-orange)](https://github.com/ivoronin/TomatoBar)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![English Readme](https://img.shields.io/badge/Readme-English-blue)](./README.md#english-version)
