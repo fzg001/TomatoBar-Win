@@ -56,7 +56,9 @@ Please find the latest release builds on the [**Releases**](https://github.com/f
 [![English Readme](https://img.shields.io/badge/Readme-English-blue)](./README.md#english-version)
 
 </div>
+
 **警告：本项目不再维护，请移步到最新的 [Tomatotock](https://github.com/fzg001/Tomatotock) 番茄钟应用。**
+
 ### 重要声明
 
 本项目是基于 Ilya Voronin 开发的优秀 macOS 应用 [TomatoBar](https://github.com/ivoronin/TomatoBar) 进行的二次开发。非常感谢原作者的出色工作！
