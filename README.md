@@ -19,6 +19,9 @@
 <a name="english-version"></a>
 ## English Version
 
+**WARNING: This project is no longer maintained. Please visit the latest [Tomatotock](https://github.com/fzg001/Tomatotock) for an updated Pomodoro timer application.**
+
+
 ### Important Notice
 
 This project is a derivative work based on the excellent [TomatoBar for macOS](https://github.com/ivoronin/TomatoBar) by Ilya Voronin. Many thanks to the original author for their great work!
@@ -38,14 +41,12 @@ TomatoBar for Windows is a simple Pomodoro timer application designed to run dis
 
 Please find the latest release builds on the [**Releases**](https://github.com/fzg001/TomatoBar-Win/releases) page. Download the appropriate executable or archive for your system.
 
-### supplementary instruction
-There might still be some bugs at present. All users can make self-modifications to this project. I will check for more serious issues in the project from time to time.
 
 ---
 
 <a name="中文说明"></a>
 ## 中文说明
-
+**警告：本项目不再维护，请移步到最新的 [Tomatotock](https://github.com/fzg001/Tomatotock) 番茄钟应用。**
 <div align="center">
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-fzg001/TomatoBar--Win-blue)](https://github.com/fzg001/TomatoBar-Win)
@@ -75,5 +76,4 @@ TomatoBar for Windows 是一个简单的番茄钟计时器应用程序，设计�
 
 请前往 [**Releases**](https://github.com/fzg001/TomatoBar-Win/releases) 页面查找最新的发布版本。下载适合你系统的可执行文件或压缩包。
 
-### 补充说明
-目前可能还有一些bug存在，用户可以对本项目进行自行修复调整。
+
